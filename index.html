@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Weather Report</title>
+		<style>
+			html, body {
+  				height: 100%;
+			  	margin: 0;
+			  	padding: 0;
+			}
+			#google_canvas {
+			  	height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		
+		<div id="google_canvas"></div>
+	
+		<script defer src="https://maps.googleapis.com/maps/api/js?key=GoogleApiKey&callback=initMap"></script>
+	
+	    <script>
+	    function initMap() {
+	    	if(!navigator.geolocation) {
+	    		document.getElementById('google_canvas').innerHTML = 'No Geolocation Support.';
+	    		return;
+	    	}
+	    	navigator.geolocation.getCurrentPosition(function(position) {
+
+	  			var myLatLng = {lat: position.coords.latitude, lng: position.coords.longitude};
+				var map = new google.maps.Map(document.getElementById('google_canvas'), {
+			    	zoom: 15,
+			    	center: myLatLng
+			  	});
+
+		
+	  	      
+	  			var marker = new google.maps.Marker({
+				    position: myLatLng,
+				    map: map,
+				    draggable: true,
+				    animation: google.maps.Animation.DROP
+	  			});
+
+	  			google.maps.event.addListener(marker, 'dragend', function(evt){
+	      			var myLatLng = {lat: evt.latLng.lat(), lng: evt.latLng.lng()};
+				  	findWeather(myLatLng);
+				});
+
+	  			findWeather(myLatLng);
+  
+  			
+  
+	  			function findWeather(latLng){
+	  	 			var requestString = "http://api.openweathermap.org/data/2.5/weather?lat=" + latLng.lat + "&lon=" + latLng.lng + "&format=json&APPID=OpenWeatherMapApiKey";
+	    			var request = new XMLHttpRequest();
+	    			request.onload = proccessResults;
+	    			request.open("get", requestString, true);
+	    			request.send();
+	  			}
+	  
+	  			var infowindow;
+	  			function proccessResults(){
+	  				var results = JSON.parse(this.responseText);
+	    			var info = infoContent(results);
+	    			if(infowindow){
+	    				infowindow.close(map);
+	    			}
+	    			infowindow = new google.maps.InfoWindow({
+	    				content: info,
+	          			maxWidth: 200
+	        		});
+	    			infowindow.open(map, marker); 
+	  			}
+				
+				function infoContent(weatherReport){
+	   				var info = "<h2> " + weatherReport.name +  "</h2><span>  Current Temperature - <b>" + weatherReport.main.temp + " K </b> </span>";
+	    			return info;
+	   			}
+   			
+	  		});
+   
+   
+		};
+	    </script>
+	</body>
+</html>
